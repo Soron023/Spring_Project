@@ -55,7 +55,7 @@ public interface FileUploadRepository extends JpaRepository<FileUpload, Long>, J
     long countByFileType(String fileType);
     
     // Find files uploaded today
-    @Query("SELECT f FROM FileUpload f WHERE DATE(f.uploadedAt) = CURRENT_DATE")
+    @Query("SELECT f FROM FileUpload f WHERE CAST(f.uploadedAt AS date) = CURRENT_DATE")
     List<FileUpload> findFilesUploadedToday();
     
     // Find largest files
