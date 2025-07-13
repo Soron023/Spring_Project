@@ -42,18 +42,25 @@ A comprehensive Spring Boot application featuring user management, product categ
 ## 🛠️ Technology Stack
 
 - **Backend**: Spring Boot 3.2.0
-- **Database**: MySQL 8.0
+- **Database**: PostgreSQL 15 (configurable to MySQL)
 - **Security**: Spring Security with JWT
 - **ORM**: Spring Data JPA with Hibernate
 - **Validation**: Bean Validation (Jakarta)
 - **Build Tool**: Maven
 - **Java Version**: 17
+- **Containerization**: Docker & Docker Compose
+- **CI/CD**: Jenkins Pipeline
+- **Monitoring**: Prometheus & Grafana
+- **Caching**: Redis
+- **Reverse Proxy**: Nginx
 
 ## 📋 Prerequisites
 
 - Java 17 or higher
-- MySQL 8.0 or higher
 - Maven 3.6 or higher
+- Docker Desktop (for containerized deployment)
+- PostgreSQL 15 or higher (or MySQL 8.0+)
+- Jenkins (for CI/CD pipeline)
 
 ## 🚀 Quick Start
 
@@ -64,12 +71,21 @@ cd spring-boot-app
 ```
 
 ### 2. Database Setup
-Create a MySQL database and update the configuration in `src/main/resources/application.properties`:
+Create a PostgreSQL database and update the configuration in `src/main/resources/application.properties`:
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/spring_boot_app?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+spring.datasource.url=jdbc:postgresql://localhost:5432/spring_boot_app
 spring.datasource.username=your_username
 spring.datasource.password=your_password
+```
+
+**Alternative: Use Docker Compose (Recommended)**
+```bash
+# Start with Docker (includes PostgreSQL and Redis)
+docker-compose up -d
+
+# Or use the deployment script
+./docker-deploy.sh start dev
 ```
 
 ### 3. JWT Configuration
@@ -79,12 +95,58 @@ jwt.secret=your-very-long-and-secure-secret-key-here
 ```
 
 ### 4. Build and Run
+
+#### Option A: Traditional Maven
 ```bash
 mvn clean install
 mvn spring-boot:run
 ```
 
+#### Option B: Docker (Recommended)
+```bash
+# Build and run with Docker
+docker build -t spring-boot-app .
+docker-compose up -d
+
+# Or use the quick start script
+./quick-start.sh
+```
+
 The application will start on `http://localhost:8080`
+
+## 🐳 Docker & Jenkins
+
+### Quick Docker Commands
+```bash
+# Build and start development environment
+./docker-deploy.sh build
+./docker-deploy.sh start dev
+
+# Start staging environment
+./docker-deploy.sh start staging
+
+# Start production environment (with monitoring)
+./docker-deploy.sh start prod
+
+# View logs
+./docker-deploy.sh logs dev
+
+# Stop environment
+./docker-deploy.sh stop dev
+```
+
+### Jenkins Pipeline
+The project includes a comprehensive Jenkins pipeline (`Jenkinsfile`) with:
+- Multi-stage CI/CD pipeline
+- Code quality analysis (SonarQube)
+- Security scanning
+- Docker image building and pushing
+- Environment-specific deployments
+- Slack notifications
+
+**Setup**: Configure Jenkins with the required plugins and credentials, then create a pipeline job pointing to the `Jenkinsfile`.
+
+For detailed Docker and Jenkins documentation, see `DOCKER_JENKINS_GUIDE.md`.
 
 ## 📚 API Documentation
 
@@ -403,6 +465,43 @@ ENTRYPOINT ["java", "-jar", "/app.jar"]
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+## 📚 Documentation
+
+### 📖 User Guides
+- **[Complete User Guide](USER_GUIDE.md)** - Comprehensive guide covering everything from setup to deployment
+- **[Quick Start Guide](QUICK_START.md)** - Get the application running in 5 minutes
+- **[API Reference](API_REFERENCE.md)** - Complete API documentation with examples
+
+### 🛠️ Development Resources
+- **[Postman Collection](Spring_Boot_App_API.postman_collection.json)** - Ready-to-use API testing collection
+- **[Docker Setup](docker-compose.dev.yml)** - Development environment with Docker
+- **[Jenkins Pipeline](Jenkinsfile)** - CI/CD automation
+- **[Monitoring Setup](monitoring/)** - Prometheus & Grafana configuration
+
+### 📋 Project Structure
+```
+spring-boot-app/
+├── src/main/java/com/example/springbootapp/
+│   ├── config/                 # Configuration classes
+│   ├── controller/             # REST controllers
+│   ├── dto/                   # Data Transfer Objects
+│   ├── entity/                # JPA entities
+│   ├── exception/             # Custom exceptions
+│   ├── interceptor/           # Request interceptors
+│   ├── repository/            # Data access layer
+│   ├── scheduler/             # Scheduled tasks
+│   ├── security/              # Security configuration
+│   ├── service/               # Business logic interfaces
+│   │   └── impl/             # Service implementations
+│   ├── specification/         # JPA specifications
+│   └── util/                  # Utility classes
+├── src/main/resources/
+│   ├── db/migration/          # Flyway migration scripts
+│   ├── messages/              # Internationalization files
+│   └── application.properties # Application configuration
+└── src/test/                  # Test files
+```
+
 ## 🆘 Support
 
 For support and questions, please open an issue in the repository or contact the development team.
@@ -413,4 +512,8 @@ For support and questions, please open an issue in the repository or contact the
 - Complete user management system
 - Product and category management
 - JWT authentication and authorization
-- Comprehensive API documentation # Spring_Project
+- Comprehensive API documentation
+- Docker and Jenkins integration
+- Monitoring and audit systems
+- Role and permission management
+- Internationalization support
