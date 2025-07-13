@@ -51,6 +51,18 @@ public class Product {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    @Column(name = "discount_percent")
+    private BigDecimal discountPercent;
+
+    @Column(name = "sale_price", precision = 10, scale = 2)
+    private BigDecimal salePrice;
+
+    public BigDecimal getDiscountPercent() { return discountPercent; }
+    public void setDiscountPercent(BigDecimal discountPercent) { this.discountPercent = discountPercent; }
+
+    public BigDecimal getSalePrice() { return salePrice; }
+    public void setSalePrice(BigDecimal salePrice) { this.salePrice = salePrice; }
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

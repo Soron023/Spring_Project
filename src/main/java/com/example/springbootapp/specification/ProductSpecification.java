@@ -28,4 +28,7 @@ public class ProductSpecification {
     public static Specification<Product> isActive(Boolean active) {
         return (root, query, cb) -> active == null ? null : cb.equal(root.get("active"), active);
     }
+    public static Specification<Product> lowStock(int threshold) {
+        return (root, query, cb) -> cb.lessThan(root.get("stockQuantity"), threshold);
+    }
 } 

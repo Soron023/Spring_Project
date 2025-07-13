@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Staging
+  postgres:
+    image: postgres:15-alpine
+    container_name: spring_boot_app_db_staging
+    environment:
+      POSTGRES_DB: spring_boot_app_staging
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: staging_password
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    networks:
+      - spring_boot_staging_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Application for Staging
+  app:
+    image: ${DOCKER_REGISTRY:-localhost}/spring-boot-app:latest
+    container_name: spring_boot_app_staging
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/spring_boot_app_staging
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: staging_password
+      SPRING_PROFILES_ACTIVE: staging
+      JWT_SECRET: staging-secret-key-123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+      SERVER_PORT: 8080
+    ports:
+      - "8081:8080"  # Different port to avoid conflicts
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - spring_boot_staging_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Redis for Staging
+  redis:
+    image: redis:7-alpine
+    container_name: spring_boot_app_redis_staging
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    networks:
+      - spring_boot_staging_network
+    restart: unless-stopped
+
+volumes:
+  postgres_staging_data:
+
+networks:
+  spring_boot_staging_network:
+    driver: bridge 

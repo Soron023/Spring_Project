@@ -137,4 +137,20 @@ public class ProductController {
         Page<Product> products = productService.getOutOfStockProducts(pageable);
         return ResponseEntity.ok(products);
     }
+
+    @GetMapping("/low-stock")
+    public ResponseEntity<List<Product>> getLowStockProducts(@RequestParam(defaultValue = "10") int threshold) {
+        List<Product> lowStockProducts = productService.getLowStockProducts(threshold);
+        return ResponseEntity.ok(lowStockProducts);
+    }
+
+    @PostMapping("/{id}/sale")
+    public ResponseEntity<Product> saleProduct(
+            @PathVariable Long id,
+            @RequestParam int quantity,
+            @RequestParam(required = false) BigDecimal discountPercent
+    ) {
+        Product product = productService.saleProduct(id, quantity, discountPercent);
+        return ResponseEntity.ok(product);
+    }
 } 

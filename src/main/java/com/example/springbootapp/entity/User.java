@@ -43,9 +43,8 @@ public class User implements UserDetails {
     @Column(name = "last_name", nullable = false)
     private String lastName;
     
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role = Role.USER;
+    private String role = "USER";
     
     @Column(name = "is_enabled")
     private boolean enabled = true;
@@ -136,11 +135,11 @@ public class User implements UserDetails {
         this.lastName = lastName;
     }
     
-    public Role getRole() {
+    public String getRole() {
         return role;
     }
     
-    public void setRole(Role role) {
+    public void setRole(String role) {
         this.role = role;
     }
     
@@ -163,7 +162,7 @@ public class User implements UserDetails {
     // UserDetails implementation
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
     
     @Override

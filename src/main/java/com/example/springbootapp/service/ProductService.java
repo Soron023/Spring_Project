@@ -25,4 +25,6 @@ public interface ProductService {
     Page<Product> getOutOfStockProducts(Pageable pageable);
     List<ProductDto> getAllProductsWithCategoryName();
     ProductDto getProductDtoById(Long id);
+    Product saleProduct(Long productId, int quantity, java.math.BigDecimal discountPercent);
+    List<Product> getLowStockProducts(int threshold);
 } 

@@ -46,7 +46,7 @@ class UserServiceTest {
         testUser.setPassword("encodedPassword");
         testUser.setFirstName("Test");
         testUser.setLastName("User");
-        testUser.setRole(Role.USER);
+        testUser.setRole("USER");
         testUser.setEnabled(true);
 
         registrationDto = new UserRegistrationDto();
@@ -76,7 +76,7 @@ class UserServiceTest {
         assertNotNull(result);
         assertEquals(registrationDto.getUsername(), result.getUsername());
         assertEquals(registrationDto.getEmail(), result.getEmail());
-        assertEquals(Role.USER, result.getRole());
+        assertEquals("USER", result.getRole());
         assertTrue(result.isEnabled());
         
         verify(userRepository).existsByUsername(registrationDto.getUsername());

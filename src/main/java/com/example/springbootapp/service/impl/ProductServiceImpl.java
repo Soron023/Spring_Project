@@ -4,11 +4,17 @@ import com.example.springbootapp.dto.ProductDto;
 import com.example.springbootapp.entity.Category;
 import com.example.springbootapp.entity.Product;
 import com.example.springbootapp.entity.User;
+import com.example.springbootapp.entity.Order;
 import com.example.springbootapp.exception.ResourceNotFoundException;
+import com.example.springbootapp.exception.BusinessException;
 import com.example.springbootapp.repository.ProductRepository;
+import com.example.springbootapp.repository.OrderRepository;
 import com.example.springbootapp.service.ProductService;
 import com.example.springbootapp.service.CategoryService;
 import com.example.springbootapp.service.UserService;
+import com.example.springbootapp.specification.ProductSpecification;
+import com.example.springbootapp.util.StreamUtils;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +40,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Override
     public List<Product> getAllProducts() {
@@ -164,9 +175,72 @@ public class ProductServiceImpl implements ProductService {
         return dto;
     }
 
+    @Override
+    public Product saleProduct(Long productId, int quantity, BigDecimal discountPercent) {
+        Product product = getProductById(productId);
+        User user = getCurrentUser();
+        
+        if (product.getStockQuantity() < quantity) {
+            throw new BusinessException(
+                "Not enough stock for this sale. Available: " + product.getStockQuantity() + ", Requested: " + quantity,
+                "error.product.low.stock",
+                product.getStockQuantity(), quantity
+            );
+        }
+        
+        product.setStockQuantity(product.getStockQuantity() - quantity);
+
+        BigDecimal unitPrice = product.getPrice();
+        BigDecimal finalUnitPrice = calculateFinalPrice(unitPrice, discountPercent);
+        
+        if (discountPercent != null && discountPercent.compareTo(BigDecimal.ZERO) > 0) {
+            product.setDiscountPercent(discountPercent);
+            product.setSalePrice(finalUnitPrice);
+        } else {
+            product.setDiscountPercent(null);
+            product.setSalePrice(null);
+        }
+
+        // Create order using method reference
+        BigDecimal totalFinalPrice = finalUnitPrice.multiply(BigDecimal.valueOf(quantity));
+        Order order = new Order(user, product, quantity, unitPrice, discountPercent, totalFinalPrice);
+        orderRepository.save(order);
+
+        // Notification using lambda
+        sendOrderNotification(user, product, quantity, finalUnitPrice, totalFinalPrice);
+
+        return productRepository.save(product);
+    }
+
+    @Override
+    public List<Product> getLowStockProducts(int threshold) {
+        return StreamUtils.filterAndMap(
+            productRepository.findAll(),
+            product -> product.getStockQuantity() != null && product.getStockQuantity() < threshold,
+            Function.identity()
+        );
+    }
+
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         return userService.getUserByUsername(username);
+    }
+
+    private BigDecimal calculateFinalPrice(BigDecimal unitPrice, BigDecimal discountPercent) {
+        return Optional.ofNullable(discountPercent)
+                .filter(discount -> discount.compareTo(BigDecimal.ZERO) > 0)
+                .map(discount -> {
+                    BigDecimal discountAmount = unitPrice.multiply(discount).divide(new BigDecimal("100"));
+                    return unitPrice.subtract(discountAmount);
+                })
+                .orElse(unitPrice);
+    }
+
+    private void sendOrderNotification(User user, Product product, int quantity, 
+                                     BigDecimal unitPrice, BigDecimal totalPrice) {
+        String message = String.format("Order placed: User %s bought %d of '%s' at %s each. Total: %s",
+                user.getUsername(), quantity, product.getName(), unitPrice, totalPrice);
+        System.out.println(message);
     }
 } 

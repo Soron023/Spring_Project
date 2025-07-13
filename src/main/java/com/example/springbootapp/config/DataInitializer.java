@@ -2,7 +2,6 @@ package com.example.springbootapp.config;
 
 import com.example.springbootapp.entity.Category;
 import com.example.springbootapp.entity.Product;
-import com.example.springbootapp.entity.Role;
 import com.example.springbootapp.entity.User;
 import com.example.springbootapp.repository.CategoryRepository;
 import com.example.springbootapp.repository.ProductRepository;
@@ -59,7 +58,7 @@ public class DataInitializer implements CommandLineRunner {
         admin.setPassword(passwordEncoder.encode("admin123"));
         admin.setFirstName("Admin");
         admin.setLastName("User");
-        admin.setRole(Role.ADMIN);
+        admin.setRole("ADMIN");
         admin.setEnabled(true);
         userRepository.save(admin);
         
@@ -70,7 +69,7 @@ public class DataInitializer implements CommandLineRunner {
         moderator.setPassword(passwordEncoder.encode("mod123"));
         moderator.setFirstName("Moderator");
         moderator.setLastName("User");
-        moderator.setRole(Role.MODERATOR);
+        moderator.setRole("MODERATOR");
         moderator.setEnabled(true);
         userRepository.save(moderator);
         
@@ -81,7 +80,7 @@ public class DataInitializer implements CommandLineRunner {
         user.setPassword(passwordEncoder.encode("user123"));
         user.setFirstName("Regular");
         user.setLastName("User");
-        user.setRole(Role.USER);
+        user.setRole("USER");
         user.setEnabled(true);
         userRepository.save(user);
         
