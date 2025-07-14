@@ -1,0 +1,6 @@
+com/example/springbootapp/repository/FileUploadRepositoryTest.class
+com/example/springbootapp/SpringBootAppApplicationTests.class
+com/example/springbootapp/repository/ReportRepositoryTest.class
+com/example/springbootapp/service/UserServiceTest.class
+com/example/springbootapp/repository/WorkflowRepositoryTest.class
+com/example/springbootapp/repository/EmailTemplateRepositoryTest.class
