@@ -6,6 +6,7 @@ import com.example.springbootapp.exception.ResourceNotFoundException;
 import com.example.springbootapp.repository.FileUploadRepository;
 import com.example.springbootapp.repository.UserRepository;
 import com.example.springbootapp.specification.FileUploadSpecification;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -208,7 +209,7 @@ public class FileUploadServiceImpl implements FileUploadService {
 
     @Override
     public List<FileUpload> findByFileTypes(List<String> fileTypes) {
-        return fileUploadRepository.findByFileTypes(fileTypes);
+        return findBySpecification(FileUploadSpecification.hasFileTypes(fileTypes));
     }
 
     @Override
@@ -218,7 +219,7 @@ public class FileUploadServiceImpl implements FileUploadService {
 
     @Override
     public List<FileUpload> findDuplicateFiles() {
-        return fileUploadRepository.findDuplicateFiles();
+        return findBySpecification(FileUploadSpecification.isDuplicate());
     }
 
     @Override
@@ -421,6 +422,31 @@ public class FileUploadServiceImpl implements FileUploadService {
             }
         }
         return false;
+    }
+
+    public FileUpload updateFileUpload(Long id, FileUpload updatedData) {
+        FileUpload existing = fileUploadRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("FileUpload not found"));
+        BeanUtils.copyProperties(updatedData, existing, getNullPropertyNames(updatedData));
+        return fileUploadRepository.save(existing);
+    }
+
+    private String[] getNullPropertyNames(Object source) {
+        try {
+            java.beans.BeanInfo beanInfo = java.beans.Introspector.getBeanInfo(source.getClass(), Object.class);
+            return java.util.Arrays.stream(beanInfo.getPropertyDescriptors())
+                    .filter(pd -> {
+                        try {
+                            return pd.getReadMethod().invoke(source) == null;
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
+                    .map(java.beans.PropertyDescriptor::getName)
+                    .toArray(String[]::new);
+        } catch (java.beans.IntrospectionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // Duplicate detection

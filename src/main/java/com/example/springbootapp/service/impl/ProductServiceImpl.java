@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.BeanUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -219,6 +220,31 @@ public class ProductServiceImpl implements ProductService {
             product -> product.getStockQuantity() != null && product.getStockQuantity() < threshold,
             Function.identity()
         );
+    }
+
+    public Product updateProductWithBeanUtils(Long id, Product updatedData) {
+        Product product = getProductById(id);
+        BeanUtils.copyProperties(updatedData, product, getNullPropertyNames(updatedData));
+        // Do not update id or createdBy
+        return productRepository.save(product);
+    }
+
+    private String[] getNullPropertyNames(Object source) {
+        try {
+            java.beans.BeanInfo beanInfo = java.beans.Introspector.getBeanInfo(source.getClass(), Object.class);
+            return java.util.Arrays.stream(beanInfo.getPropertyDescriptors())
+                    .filter(pd -> {
+                        try {
+                            return pd.getReadMethod().invoke(source) == null;
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
+                    .map(java.beans.PropertyDescriptor::getName)
+                    .toArray(String[]::new);
+        } catch (java.beans.IntrospectionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private User getCurrentUser() {

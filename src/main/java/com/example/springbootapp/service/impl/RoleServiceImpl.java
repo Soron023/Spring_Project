@@ -10,6 +10,7 @@ import com.example.springbootapp.repository.PermissionRepository;
 import com.example.springbootapp.repository.RolePermissionRepository;
 import com.example.springbootapp.service.RoleService;
 import com.example.springbootapp.service.PermissionService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +71,31 @@ public class RoleServiceImpl implements RoleService {
 
         role.setName(roleDto.getName());
         return roleRepository.save(role);
+    }
+
+    public Role updateRoleWithBeanUtils(Long id, Role updatedData) {
+        Role role = getRoleById(id);
+        BeanUtils.copyProperties(updatedData, role, getNullPropertyNames(updatedData));
+        // Do not update id
+        return roleRepository.save(role);
+    }
+
+    private String[] getNullPropertyNames(Object source) {
+        try {
+            java.beans.BeanInfo beanInfo = java.beans.Introspector.getBeanInfo(source.getClass(), Object.class);
+            return java.util.Arrays.stream(beanInfo.getPropertyDescriptors())
+                    .filter(pd -> {
+                        try {
+                            return pd.getReadMethod().invoke(source) == null;
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
+                    .map(java.beans.PropertyDescriptor::getName)
+                    .toArray(String[]::new);
+        } catch (java.beans.IntrospectionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

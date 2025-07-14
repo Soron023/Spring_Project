@@ -5,6 +5,7 @@ import com.example.springbootapp.entity.Category;
 import com.example.springbootapp.exception.ResourceNotFoundException;
 import com.example.springbootapp.repository.CategoryRepository;
 import com.example.springbootapp.repository.ProductRepository;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,6 +68,31 @@ public class CategoryService {
         category.setActive(categoryDto.isActive());
         
         return categoryRepository.save(category);
+    }
+    
+    public Category updateCategoryWithBeanUtils(Long id, Category updatedData) {
+        Category category = getCategoryById(id);
+        BeanUtils.copyProperties(updatedData, category, getNullPropertyNames(updatedData));
+        // Do not update id
+        return categoryRepository.save(category);
+    }
+
+    private String[] getNullPropertyNames(Object source) {
+        try {
+            java.beans.BeanInfo beanInfo = java.beans.Introspector.getBeanInfo(source.getClass(), Object.class);
+            return java.util.Arrays.stream(beanInfo.getPropertyDescriptors())
+                    .filter(pd -> {
+                        try {
+                            return pd.getReadMethod().invoke(source) == null;
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
+                    .map(java.beans.PropertyDescriptor::getName)
+                    .toArray(String[]::new);
+        } catch (java.beans.IntrospectionException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     public void deleteCategory(Long id) {

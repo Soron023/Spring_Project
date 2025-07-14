@@ -6,6 +6,7 @@ import com.example.springbootapp.entity.User;
 import com.example.springbootapp.exception.ResourceNotFoundException;
 import com.example.springbootapp.exception.UserAlreadyExistsException;
 import com.example.springbootapp.repository.UserRepository;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -133,5 +134,30 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByUsernameOrEmail(String username, String email) {
         return userRepository.findByUsernameOrEmail(username, email);
+    }
+
+    public User updateUserWithBeanUtils(Long id, User userDetails) {
+        User user = getUserById(id);
+        BeanUtils.copyProperties(userDetails, user, getNullPropertyNames(userDetails));
+        // Do not update password here
+        return userRepository.save(user);
+    }
+
+    private String[] getNullPropertyNames(Object source) {
+        try {
+            java.beans.BeanInfo beanInfo = java.beans.Introspector.getBeanInfo(source.getClass(), Object.class);
+            return java.util.Arrays.stream(beanInfo.getPropertyDescriptors())
+                    .filter(pd -> {
+                        try {
+                            return pd.getReadMethod().invoke(source) == null;
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
+                    .map(java.beans.PropertyDescriptor::getName)
+                    .toArray(String[]::new);
+        } catch (java.beans.IntrospectionException e) {
+            throw new RuntimeException(e);
+        }
     }
 } 
